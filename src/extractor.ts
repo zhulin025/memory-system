@@ -7,7 +7,7 @@
 import { readFile, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import { basename } from 'path'
-import { parse } from 'yaml'
+import { parse, stringify } from 'yaml'
 import type { Memory, MemoryFrontmatter, ExtractResult, MemoryType } from './types.js'
 import { getMemoriesDir, getMemoryFilePath, ensureMemoryDir } from './paths.js'
 import { readIndex, addIndexEntry } from './index.js'
@@ -396,10 +396,8 @@ function formatMemoryFile(
   frontmatter: MemoryFrontmatter,
   content: string
 ): string {
-  const yaml = require('yaml')
-  
   return `---
-${yaml.stringify(frontmatter).trim()}
+${stringify(frontmatter).trim()}
 ---
 
 ${content}

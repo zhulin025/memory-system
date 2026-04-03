@@ -3,9 +3,12 @@ node_modules/
 package-lock.json
 yarn.lock
 
-# Build output
-dist/
+# Build output (commit dist/ for easier testing without Node.js build step)
+# dist/
 build/
+
+# Test files
+test*.js
 
 # Logs
 *.log
