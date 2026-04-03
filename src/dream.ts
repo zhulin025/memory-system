@@ -4,10 +4,10 @@
  * 定期整理、合并、修剪记忆
  */
 
-import { utimes, writeFile } from 'fs/promises'
+import { stat, utimes, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
-import type { DreamResult } from './types.js'
-import { getDreamLockPath, getMemoriesDir } from './paths.js'
+import type { DreamResult, IndexEntry } from './types.js'
+import { getDreamLockPath, getMemoriesDir, getIndexFilePath } from './paths.js'
 import { readIndex, updateIndex } from './index.js'
 
 // ============================================================================
@@ -84,8 +84,8 @@ async function getHoursSinceLastDream(projectId?: string): Promise<number> {
   }
   
   try {
-    const stats = await stat(lockPath)
-    const mtime = stats.mtimeMs
+    const fileStats = await stat(lockPath)
+    const mtime = fileStats.mtimeMs
     const hoursSince = (Date.now() - mtime) / (1000 * 60 * 60)
     return hoursSince
   } catch {
@@ -119,7 +119,7 @@ async function countSessionsSinceLastDream(projectId?: string): Promise<number> 
     
     // 统计 lockTime 之后修改的记忆文件
     const dir = getMemoriesDir(projectId)
-    const { readdir, stat: fsStat } = await import('fs/promises')
+    const { readdir } = await import('fs/promises')
     const files = await readdir(dir)
     
     let count = 0
@@ -127,7 +127,7 @@ async function countSessionsSinceLastDream(projectId?: string): Promise<number> 
       if (!file.endsWith('.md')) continue
       
       const filePath = `${dir}/${file}`
-      const fileStats = await fsStat(filePath)
+      const fileStats = await stat(filePath)
       
       if (fileStats.mtimeMs > lockTime) {
         count++
@@ -152,8 +152,8 @@ export async function tryAcquireDreamLock(projectId?: string): Promise<boolean> 
   
   try {
     if (existsSync(lockPath)) {
-      const stats = await stat(lockPath)
-      const mtime = stats.mtimeMs
+      const fileStats = await stat(lockPath)
+      const mtime = fileStats.mtimeMs
       const hoursSince = (Date.now() - mtime) / (1000 * 60 * 60)
       
       if (hoursSince < DEFAULT_MIN_HOURS) {

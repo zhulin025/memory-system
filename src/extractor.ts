@@ -91,9 +91,9 @@ async function analyzeMessages(messages: MemoryMessage[]): Promise<MemoryCandida
   // 简单实现：查找明确的记忆保存信号
   // 完整实现应该调用 LLM 分析
   
-  for (const msg of messages) {
+  for (const message of messages) {
     // 查找用户明确要求记忆的内容
-    if (msg.role === 'user') {
+    if (message.role === 'user') {
       const memorySignals = [
         /记住[,：]\s*(.+)/i,
         /记一下[,：]\s*(.+)/i,
@@ -102,9 +102,9 @@ async function analyzeMessages(messages: MemoryMessage[]): Promise<MemoryCandida
       ]
       
       for (const signal of memorySignals) {
-        const match = msg.content.match(signal)
+        const match = message.content.match(signal)
         if (match) {
-          const candidate = extractCandidateFromMessage(msg, match[1])
+          const candidate = extractCandidateFromMessage(message, match[1])
           if (candidate) {
             candidates.push(candidate)
           }
@@ -113,14 +113,14 @@ async function analyzeMessages(messages: MemoryMessage[]): Promise<MemoryCandida
     }
     
     // 查找助手保存记忆的声明
-    if (msg.role === 'assistant') {
+    if (message.role === 'assistant') {
       const saveSignals = [
         /\[保存 (\w+) 记忆[:：]?\s*(.+)\]/i,
         /\[记录 (\w+) 记忆[:：]?\s*(.+)\]/i,
       ]
       
       for (const signal of saveSignals) {
-        const match = msg.content.match(signal)
+        const match = message.content.match(signal)
         if (match) {
           const type = match[1].toLowerCase() as MemoryType
           const content = match[2]
@@ -145,7 +145,7 @@ async function analyzeMessages(messages: MemoryMessage[]): Promise<MemoryCandida
  * 从消息提取候选记忆
  */
 function extractCandidateFromMessage(
-  msg: MemoryMessage,
+  _msg: MemoryMessage,
   content: string
 ): MemoryCandidate | null {
   // 推断记忆类型

@@ -10,8 +10,8 @@
 import type { MemorySystemConfig, ExtractResult, DreamResult } from './types.js'
 import { getProjectIdFromCwd, ensureMemoryDir } from './paths.js'
 import { extractMemories } from './extractor.js'
-import { shouldTriggerDream, runDream, tryAcquireDreamLock, releaseDreamLock } from './dream.js'
-import { readIndex, updateIndex, addIndexEntry, removeIndexEntry } from './index.js'
+import { shouldTriggerDream, runDream } from './dream.js'
+import { readIndex, addIndexEntry, removeIndexEntry } from './index.js'
 
 // ============================================================================
 // 配置
@@ -275,7 +275,8 @@ async function readStdin(): Promise<string> {
 
 export * from './types.js'
 export * from './paths.js'
-export * from './memoryTypes.js'
 export * from './extractor.js'
 export * from './dream.js'
-export * from './index.js'
+// memoryTypes 和 index 的部分函数单独导出，避免重复
+export { buildExtractPrompt, buildDreamPrompt } from './memoryTypes.js'
+export { readIndex, updateIndex, addIndexEntry, removeIndexEntry } from './index.js'

@@ -6,7 +6,6 @@
 
 import { readFile, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
-import { join } from 'path'
 import type { IndexEntry, MemoryType } from './types.js'
 import { getIndexFilePath } from './paths.js'
 
