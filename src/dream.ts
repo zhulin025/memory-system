@@ -4,11 +4,11 @@
  * 定期整理、合并、修剪记忆
  */
 
-import { stat, utimes, readFile, writeFile } from 'fs/promises'
+import { utimes, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
-import type { DreamResult, IndexEntry } from './types.js'
-import { getDreamLockPath, getMemoriesDir, getIndexFilePath } from './paths.js'
-import { readIndex, updateIndex, parseIndexContent } from './index.js'
+import type { DreamResult } from './types.js'
+import { getDreamLockPath, getMemoriesDir } from './paths.js'
+import { readIndex, updateIndex } from './index.js'
 
 // ============================================================================
 // 常量
@@ -16,7 +16,6 @@ import { readIndex, updateIndex, parseIndexContent } from './index.js'
 
 const DEFAULT_MIN_HOURS = 24
 const DEFAULT_MIN_SESSIONS = 5
-const LOCK_FILE_MTIME_THRESHOLD = 24 * 60 * 60 * 1000  // 24 小时
 
 // ============================================================================
 // Dream 触发器
@@ -120,7 +119,7 @@ async function countSessionsSinceLastDream(projectId?: string): Promise<number> 
     
     // 统计 lockTime 之后修改的记忆文件
     const dir = getMemoriesDir(projectId)
-    const { readdir, stat } = await import('fs/promises')
+    const { readdir, stat: fsStat } = await import('fs/promises')
     const files = await readdir(dir)
     
     let count = 0
@@ -128,7 +127,7 @@ async function countSessionsSinceLastDream(projectId?: string): Promise<number> 
       if (!file.endsWith('.md')) continue
       
       const filePath = `${dir}/${file}`
-      const fileStats = await stat(filePath)
+      const fileStats = await fsStat(filePath)
       
       if (fileStats.mtimeMs > lockTime) {
         count++

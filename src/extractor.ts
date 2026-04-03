@@ -6,12 +6,11 @@
 
 import { readFile, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
-import { join, basename } from 'path'
+import { basename } from 'path'
 import { parse } from 'yaml'
 import type { Memory, MemoryFrontmatter, ExtractResult, MemoryType } from './types.js'
 import { getMemoriesDir, getMemoryFilePath, ensureMemoryDir } from './paths.js'
-import { readIndex, addIndexEntry, removeIndexEntry } from './index.js'
-import { MEMORY_TYPE_DEFINITIONS } from './memoryTypes.js'
+import { readIndex, addIndexEntry } from './index.js'
 
 // ============================================================================
 // 记忆提取
@@ -92,9 +91,7 @@ async function analyzeMessages(messages: MemoryMessage[]): Promise<MemoryCandida
   // 简单实现：查找明确的记忆保存信号
   // 完整实现应该调用 LLM 分析
   
-  for (let i = 0; i < messages.length; i++) {
-    const msg = messages[i]
-    
+  for (const msg of messages) {
     // 查找用户明确要求记忆的内容
     if (msg.role === 'user') {
       const memorySignals = [

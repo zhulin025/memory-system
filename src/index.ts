@@ -4,7 +4,7 @@
  * 管理 MEMORY.md 索引文件（≤200 行，≤25KB）
  */
 
-import { readFile, writeFile, stat } from 'fs/promises'
+import { readFile, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import { join } from 'path'
 import type { IndexEntry, MemoryType } from './types.js'
