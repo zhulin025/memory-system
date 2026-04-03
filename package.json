@@ -1,0 +1,40 @@
+{
+  "name": "@openclaw/memory-system",
+  "version": "1.0.0",
+  "description": "Claude Code 风格的记忆系统 - 自动记忆提取和 Dream 定期整理机制",
+  "type": "module",
+  "main": "src/main.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --experimental-strip-types tests/*.test.ts",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts"
+  },
+  "keywords": [
+    "openclaw",
+    "memory",
+    "claude-code",
+    "ai",
+    "skill"
+  ],
+  "author": "OpenClaw Community",
+  "license": "MIT",
+  "dependencies": {
+    "yaml": "^2.4.0",
+    "globby": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openclaw/memory-system.git"
+  },
+  "bugs": {
+    "url": "https://github.com/openclaw/memory-system/issues"
+  },
+  "homepage": "https://github.com/openclaw/memory-system#readme"
+}
