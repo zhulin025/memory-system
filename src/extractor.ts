@@ -21,10 +21,17 @@ import { readIndex, addIndexEntry } from './index.js'
  * 
  * @param messages 对话消息列表
  * @param projectId 项目 ID
+ * @param options 提取选项
  */
 export async function extractMemories(
   messages: MemoryMessage[],
-  projectId?: string
+  projectId?: string,
+  options: {
+    useLLM?: boolean
+    llmApiKey?: string
+    llmProvider?: 'anthropic' | 'openai' | 'qwen'
+    llmModel?: string
+  } = {}
 ): Promise<ExtractResult> {
   ensureMemoryDir(projectId)
   
@@ -37,7 +44,23 @@ export async function extractMemories(
   }
   
   // 1. 分析消息，提取候选记忆
-  const candidates = await analyzeMessages(messages)
+  let candidates: MemoryCandidate[]
+  
+  if (options.useLLM && options.llmApiKey) {
+    // 使用 LLM 分析
+    const { MemoryLLMAnalyzer } = await import('./llmAnalyzer.js')
+    const analyzer = new MemoryLLMAnalyzer({
+      provider: options.llmProvider || 'anthropic',
+      model: options.llmModel || 'claude-sonnet-4-5-20250929',
+      apiKey: options.llmApiKey,
+      threshold: 0.7,
+      maxMemories: 5
+    })
+    candidates = await analyzer.analyze(messages)
+  } else {
+    // 使用规则匹配（向后兼容）
+    candidates = await analyzeMessages(messages)
+  }
   
   // 2. 加载现有记忆（避免重复）
   const existingMemories = await loadExistingMemories(projectId)

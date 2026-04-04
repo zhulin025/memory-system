@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenClaw 记忆系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .memory-card { transition: all 0.2s; }
+    .memory-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- 顶部导航 -->
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <span class="text-2xl">🦞</span>
+          <h1 class="ml-3 text-xl font-bold text-gray-900">OpenClaw 记忆系统</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button onclick="showView('list')" class="text-gray-600 hover:text-gray-900">记忆列表</button>
+          <button onclick="showView('stats')" class="text-gray-600 hover:text-gray-900">统计分析</button>
+          <button onclick="showView('dream')" class="text-gray-600 hover:text-gray-900">Dream 整理</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 主内容区 -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- 记忆列表视图 -->
+    <div id="view-list" class="view-section">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">记忆列表</h2>
+        <div class="flex space-x-2">
+          <select id="filter-type" onchange="loadMemories()" class="border rounded-md px-3 py-2">
+            <option value="">全部类型</option>
+            <option value="user">User</option>
+            <option value="feedback">Feedback</option>
+            <option value="project">Project</option>
+            <option value="reference">Reference</option>
+          </select>
+          <input type="text" id="search-input" placeholder="搜索记忆..." class="border rounded-md px-3 py-2" onkeyup="loadMemories()">
+        </div>
+      </div>
+      
+      <div id="memory-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- 记忆卡片将通过 JS 动态加载 -->
+      </div>
+    </div>
+
+    <!-- 统计视图 -->
+    <div id="view-stats" class="view-section hidden">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">统计分析</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-sm font-medium text-gray-500">总记忆数</h3>
+          <p id="stat-total" class="text-3xl font-bold text-gray-900 mt-2">-</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-sm font-medium text-gray-500">User</h3>
+          <p id="stat-user" class="text-3xl font-bold text-blue-600 mt-2">-</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-sm font-medium text-gray-500">Feedback</h3>
+          <p id="stat-feedback" class="text-3xl font-bold text-green-600 mt-2">-</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-sm font-medium text-gray-500">Project</h3>
+          <p id="stat-project" class="text-3xl font-bold text-purple-600 mt-2">-</p>
+        </div>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">标签云</h3>
+        <div id="tag-cloud" class="flex flex-wrap gap-2">
+          <!-- 标签将通过 JS 动态加载 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Dream 视图 -->
+    <div id="view-dream" class="view-section hidden">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Dream 整理</h2>
+      
+      <div class="bg-white p-6 rounded-lg shadow mb-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">当前状态</h3>
+        <div id="dream-status" class="space-y-2">
+          <!-- Dream 状态将通过 JS 动态加载 -->
+        </div>
+        <button onclick="runDream()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+          立即执行 Dream
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = '/api'
+    
+    // 视图切换
+    function showView(view) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'))
+      document.getElementById(`view-${view}`).classList.remove('hidden')
+      
+      if (view === 'list') loadMemories()
+      if (view === 'stats') loadStats()
+      if (view === 'dream') loadDreamStatus()
+    }
+    
+    // 加载记忆列表
+    async function loadMemories() {
+      const type = document.getElementById('filter-type').value
+      const q = document.getElementById('search-input').value
+      
+      try {
+        const params = new URLSearchParams()
+        if (type) params.append('type', type)
+        if (q) params.append('q', q)
+        
+        const res = await fetch(`${API_BASE}/search?${params}`)
+        const data = await res.json()
+        
+        const list = document.getElementById('memory-list')
+        list.innerHTML = data.memories.map(mem => `
+          <div class="memory-card bg-white p-4 rounded-lg shadow border-l-4 border-${getTypeColor(mem.type)}">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-xs font-medium text-${getTypeColor(mem.type)} bg-${getTypeColor(mem.type)}-100 px-2 py-1 rounded">
+                  ${mem.type.toUpperCase()}
+                </span>
+                <h3 class="mt-2 text-lg font-bold text-gray-900">${mem.title}</h3>
+                <p class="mt-1 text-sm text-gray-600">${mem.oneLine}</p>
+              </div>
+            </div>
+            <div class="mt-3 flex justify-between items-center">
+              <span class="text-xs text-gray-500">${mem.file}</span>
+              <button onclick="editMemory('${mem.file}')" class="text-sm text-blue-600 hover:text-blue-800">
+                编辑
+              </button>
+            </div>
+          </div>
+        `).join('')
+      } catch (error) {
+        console.error('加载记忆失败:', error)
+      }
+    }
+    
+    // 加载统计
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API_BASE}/stats`)
+        const data = await res.json()
+        
+        document.getElementById('stat-total').textContent = data.total
+        document.getElementById('stat-user').textContent = data.byType.user
+        document.getElementById('stat-feedback').textContent = data.byType.feedback
+        document.getElementById('stat-project').textContent = data.byType.project
+        
+        const tagCloud = document.getElementById('tag-cloud')
+        tagCloud.innerHTML = Object.entries(data.tags)
+          .map(([tag, count]) => `
+            <span class="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm">
+              ${tag} <span class="text-gray-500">(${count})</span>
+            </span>
+          `).join('')
+      } catch (error) {
+        console.error('加载统计失败:', error)
+      }
+    }
+    
+    // 加载 Dream 状态
+    async function loadDreamStatus() {
+      try {
+        const res = await fetch(`${API_BASE}/dream/status`)
+        const data = await res.json()
+        
+        const status = document.getElementById('dream-status')
+        status.innerHTML = `
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-500">距离上次 Dream</p>
+              <p class="text-2xl font-bold">${data.hoursSince.toFixed(1)} 小时</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">新会话数</p>
+              <p class="text-2xl font-bold">${data.sessionsSince}</p>
+            </div>
+          </div>
+          <div class="mt-4 p-4 bg-${data.shouldTrigger ? 'green' : 'yellow'}-100 rounded">
+            <p class="text-${data.shouldTrigger ? 'green' : 'yellow'}-800">
+              ${data.shouldTrigger ? '✅ 可以触发 Dream' : '⏳ ' + data.reason}
+            </p>
+          </div>
+        `
+      } catch (error) {
+        console.error('加载 Dream 状态失败:', error)
+      }
+    }
+    
+    // 执行 Dream
+    async function runDream() {
+      if (!confirm('确定要执行 Dream 整理吗？')) return
+      
+      try {
+        const res = await fetch(`${API_BASE}/dream/run`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ force: true })
+        })
+        const data = await res.json()
+        
+        alert('Dream 整理完成！\n整理：' + data.result.memoriesConsolidated + ' 个\n修剪：' + data.result.memoriesPruned + ' 个')
+        loadDreamStatus()
+      } catch (error) {
+        console.error('执行 Dream 失败:', error)
+        alert('执行 Dream 失败：' + error.message)
+      }
+    }
+    
+    // 获取类型颜色
+    function getTypeColor(type) {
+      const colors = {
+        user: 'blue',
+        feedback: 'green',
+        project: 'purple',
+        reference: 'yellow'
+      }
+      return colors[type] || 'gray'
+    }
+    
+    // 编辑记忆（简化版 - 后续完善）
+    function editMemory(file) {
+      alert('编辑功能开发中...\n文件：' + file)
+    }
+    
+    // 初始化
+    loadMemories()
+  </script>
+</body>
+</html>

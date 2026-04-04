@@ -12,6 +12,7 @@ import { getProjectIdFromCwd, ensureMemoryDir } from './paths.js'
 import { extractMemories } from './extractor.js'
 import { shouldTriggerDream, runDream } from './dream.js'
 import { readIndex, addIndexEntry, removeIndexEntry } from './index.js'
+import { createWebUI } from './webui/server.js'
 
 // ============================================================================
 // 配置
@@ -241,6 +242,22 @@ export async function runCLI(args: string[]): Promise<void> {
       }
       break
     
+    case 'webui':
+      // 启动 Web UI
+      const port = parseInt(process.env.PORT || '3000')
+      const webui = createWebUI({
+        port,
+        host: 'localhost',
+        auth: {
+          enabled: !!process.env.WEBUI_TOKEN,
+          token: process.env.WEBUI_TOKEN || ''
+        }
+      })
+      await webui.start()
+      console.log(`Web UI 已启动：http://localhost:${port}`)
+      console.log('按 Ctrl+C 停止')
+      break
+    
     case 'help':
     default:
       console.log(`
@@ -252,10 +269,13 @@ OpenClaw 记忆系统
   memory-system dream         # 执行 Dream 整理
   memory-system status        # 检查 Dream 状态
   memory-system list          # 列出所有记忆
+  memory-system webui         # 启动 Web UI
   memory-system help          # 显示帮助
 
 配置（环境变量）:
   OPENCLAW_MEMORY_PATH        # 记忆目录路径
+  PORT                        # Web UI 端口（默认 3000）
+  WEBUI_TOKEN                 # Web UI 认证 token
 `)
       break
   }

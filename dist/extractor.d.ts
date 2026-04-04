@@ -9,8 +9,14 @@ import type { ExtractResult } from './types.js';
  *
  * @param messages 对话消息列表
  * @param projectId 项目 ID
+ * @param options 提取选项
  */
-export declare function extractMemories(messages: MemoryMessage[], projectId?: string): Promise<ExtractResult>;
+export declare function extractMemories(messages: MemoryMessage[], projectId?: string, options?: {
+    useLLM?: boolean;
+    llmApiKey?: string;
+    llmProvider?: 'anthropic' | 'openai' | 'qwen';
+    llmModel?: string;
+}): Promise<ExtractResult>;
 export interface MemoryMessage {
     role: 'user' | 'assistant';
     content: string;
